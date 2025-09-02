@@ -3,7 +3,9 @@ const Database = require("@replit/database");
 
 const app = express();
 const db = new Database();
-const PORT = process.env.PORT || 3000;
+// const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 4000;
+
 
 // Serve frontend
 app.use(express.static("public"));
