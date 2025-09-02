@@ -1,0 +1,51 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Bedtime Tracker</title>
+</head>
+<body>
+  <h1>Bedtime Tracker</h1>
+  
+  <input id="noteInput" placeholder="Add a note (optional)" />
+  <button onclick="saveRecord()">Save Bedtime</button>
+  
+  <h2>All Records</h2>
+  <ul id="recordsList"></ul>
+
+  <script>
+    // Save a new record
+    async function saveRecord() {
+      const note = document.getElementById("noteInput").value;
+
+      // Send POST request to server
+      await fetch("/save", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ note })
+      });
+
+      // Refresh the list after saving
+      loadRecords();
+    }
+
+    // Load all records and display them
+    async function loadRecords() {
+      const res = await fetch("/records");
+      const records = await res.json();
+
+      const list = document.getElementById("recordsList");
+      list.innerHTML = "";
+
+      records.forEach(r => {
+        const li = document.createElement("li");
+        li.textContent = r.date + (r.note ? " - " + r.note : "");
+        list.appendChild(li);
+      });
+    }
+
+    // Load records immediately when page opens
+    loadRecords();
+  </script>
+</body>
+</html>
