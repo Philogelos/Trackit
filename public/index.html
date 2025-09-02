@@ -1,13 +1,31 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>My App</title>
+  <title>TrackIt App</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>Hello from Frontend</h1>
-  <button id="btn">Call Backend</button>
-  <p id="output"></p>
+  <h1>TrackIt App</h1>
+
+  <div id="buttons">
+    <button class="event-btn" data-label="Bed" data-type="time">Bed</button>
+    <button class="event-btn" data-label="Up" data-type="time">Up</button>
+    <button class="event-btn" data-label="Last Eat" data-type="time">Last Eat</button>
+    <button class="event-btn" data-label="Gym" data-type="yesno">Gym</button>
+  </div>
+
+  <div id="custom-event">
+    <input id="custom-label" placeholder="Custom event label">
+    <select id="custom-type">
+      <option value="time">Time</option>
+      <option value="yesno">Yes/No</option>
+    </select>
+    <button id="add-custom">Add Event</button>
+  </div>
+
+  <h2>Events Recorded:</h2>
+  <div id="events-list"></div>
+
   <script src="script.js"></script>
 </body>
 </html>
