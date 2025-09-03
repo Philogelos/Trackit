@@ -2,10 +2,11 @@
 const express = require("express");
 const path = require("path");
 const bodyParser = require("body-parser");
-const { Database } = require("@replit/database");
+const Database = require("@replit/database").default; // <-- changed
 
 const app = express();
-const db = new Database();
+const db = new Database(); // now works
+
 
 const PORT = process.env.PORT || 4000;
 
