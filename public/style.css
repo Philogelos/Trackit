@@ -1,5 +1,15 @@
-body { font-family: Arial; text-align: center; margin: 20px; }
-button { margin: 5px; padding: 10px 20px; }
-#custom-event { margin-top: 20px; }
-table { margin: 20px auto; border-collapse: collapse; }
-th, td { padding: 8px 12px; }
+body { font-family: system-ui, Arial, sans-serif; margin: 20px; }
+h1 { margin-bottom: 10px; }
+.hidden { display: none; }
+.row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 10px 0; }
+.buttons { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+
+button { padding: 8px 14px; border: 1px solid #ccc; background: #f7f7f7; cursor: pointer; border-radius: 8px; }
+button:hover { background: #eee; }
+button.danger { background: #ffe8e8; border-color: #f3b4b4; }
+button.ghost { background: #fff; }
+
+table { border-collapse: collapse; width: 100%; max-width: 900px; }
+th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+th { background: #f3f3f3; }
+.actions button { padding: 4px 8px; }

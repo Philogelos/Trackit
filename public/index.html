@@ -1,30 +1,69 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>TrackIt App</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="utf-8" />
+  <title>TrackIt</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <h1>TrackIt App</h1>
+  <h1>TrackIt</h1>
 
-  <div id="buttons">
-    <button class="event-btn" data-label="Bed" data-type="time">Bed</button>
-    <button class="event-btn" data-label="Up" data-type="time">Up</button>
-    <button class="event-btn" data-label="Last Eat" data-type="time">Last Eat</button>
-    <button class="event-btn" data-label="Gym" data-type="yesno">Gym</button>
-  </div>
+  <section id="auth">
+    <h3>Login</h3>
+    <input id="username" placeholder="Enter username" />
+    <button id="loginBtn">Login / Continue</button>
+  </section>
 
-  <div id="custom-event">
-    <input id="custom-label" placeholder="Custom event label">
-    <select id="custom-type">
-      <option value="time">Time</option>
-      <option value="yesno">Yes/No</option>
-    </select>
-    <button id="add-custom">Add Event</button>
-  </div>
+  <section id="app" class="hidden">
+    <div class="row">
+      <div>Logged in as <b id="who"></b></div>
+      <button id="logoutBtn" class="ghost">Logout</button>
+    </div>
 
-  <h2>Events Recorded:</h2>
-  <div id="events-list"></div>
+    <h3>Quick Events (now)</h3>
+    <div id="buttons" class="buttons">
+      <button data-label="Bed" data-type="time">Bed</button>
+      <button data-label="Up" data-type="time">Up</button>
+      <button data-label="Last Eat" data-type="time">Last Eat</button>
+      <button data-label="Gym" data-type="yesno" data-value="Yes">Gym Yes</button>
+      <button data-label="Gym" data-type="yesno" data-value="No">Gym No</button>
+    </div>
+
+    <h3>Add Custom Quick Button</h3>
+    <div class="row">
+      <input id="custom-label" placeholder="Label (e.g., Read, Walk)" />
+      <select id="custom-type">
+        <option value="time">Time</option>
+        <option value="yesno">Yes/No</option>
+      </select>
+      <button id="add-custom">Add Button</button>
+    </div>
+    <div id="custom-buttons" class="buttons"></div>
+
+    <h3>Add Manual Event (pick time)</h3>
+    <div class="row">
+      <input id="manual-label" placeholder="Label" />
+      <select id="manual-type">
+        <option value="time">Time</option>
+        <option value="yesno">Yes/No</option>
+      </select>
+      <input id="manual-when" type="datetime-local" />
+      <select id="manual-value">
+        <option value="">(auto)</option>
+        <option value="Yes">Yes</option>
+        <option value="No">No</option>
+      </select>
+      <button id="add-manual">Add Event</button>
+    </div>
+
+    <div class="row">
+      <button id="resetBtn" class="danger">Reset My Events</button>
+    </div>
+
+    <h3>My Events</h3>
+    <div id="events"></div>
+  </section>
 
   <script src="script.js"></script>
 </body>
