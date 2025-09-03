@@ -83,7 +83,14 @@ app.post("/add-event", async (req, res) => {
 
   if (!eventName) return res.status(400).send("No event name provided");
 
-  const timestamp = eventTime ? new Date(eventTime).toLocaleString() : new Date().toLocaleString();
+  // old code - doesnt recognize local time, uses utc time
+  //const timestamp = eventTime ? new Date(eventTime).toLocaleString() : new Date().toLocaleString();
+
+  // new code, recognises only jlm time for now:
+  const timestamp = eventTime 
+  ? new Date(eventTime).toLocaleString("en-IL", { timeZone: "Asia/Jerusalem" })
+  : new Date().toLocaleString("en-IL", { timeZone: "Asia/Jerusalem" });
+
 
   const userKey = `events_${currentUser}`;
 
