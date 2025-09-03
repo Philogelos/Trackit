@@ -6,18 +6,31 @@
 </head>
 <body>
   <h1>TrackIt App</h1>
-  <div id="events"></div>
 
-  <h2>Add Event</h2>
+  <h2>Login / User</h2>
+  <form method="POST" action="/login">
+    <input name="username" placeholder="Username" required />
+    <button type="submit">Login</button>
+  </form>
+
+  <h2>Quick Event Buttons</h2>
+  <form method="POST" action="/add">
+    <button name="label" value="Bed">Bed</button>
+    <button name="label" value="Up">Up</button>
+    <button name="label" value="Gym">Gym</button>
+    <input name="customLabel" placeholder="Custom event" />
+    <button type="submit" name="timeType" value="auto">Add Custom</button>
+  </form>
+
+  <h2>Add Manual Event (pick time)</h2>
   <form method="POST" action="/add">
     <input name="label" placeholder="Event label" required />
-
-    <!-- Auto / Current Time -->
-    <button type="submit" name="timeType" value="auto">Add Now</button>
-
-    <!-- Manual Past Time -->
     <input type="time" name="manualTime" />
     <button type="submit" name="timeType" value="manual">Add Past Time</button>
+    <button type="submit" name="timeType" value="auto">Add Now</button>
   </form>
+
+  <h2>My Events</h2>
+  <div id="events"></div>
 </body>
 </html>
