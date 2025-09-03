@@ -2,7 +2,7 @@
 const express = require("express");
 const path = require("path");
 const bodyParser = require("body-parser");
-const Database = require("@replit/database").default; // <-- changed
+const Database = require("@replit/database"); // <-- change undone
 
 const app = express();
 const db = new Database(); // now works
