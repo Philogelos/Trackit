@@ -2,80 +2,69 @@
 const express = require("express");
 const path = require("path");
 const bodyParser = require("body-parser");
-const Database = require("@replit/database"); // <-- change undone
+const DatabaseModule = require("@replit/database");
+const Database = DatabaseModule.default || DatabaseModule; // v2 safe
 
 const app = express();
-const db = new Database(); // now works
-
+const db = new Database();
 
 const PORT = process.env.PORT || 4000;
 
-// Middleware
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, "public"))); // For CSS/JS if needed
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+app.use(express.static("public"));
 
 // Helpers
 const newId = () => Math.random().toString(36).slice(2, 10);
-const localTime = () => new Date().toLocaleString(); // Local date + time
+const getLocalTime = (d = new Date()) =>
+  new Date(d).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
-// Serve index.html
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "index.html"));
+// Routes
+app.get("/", async (req, res) => {
+  const events = (await db.get("events")) || [];
+  let table = "<table border='1'><tr><th>Time</th><th>Event</th></tr>";
+  events.forEach((e) => {
+    table += `<tr><td>${getLocalTime(e.time)}</td><td>${e.label}</td></tr>`;
+  });
+  table += "</table>";
+
+  res.send(`
+    <h1>TrackIt App</h1>
+    <div>Events Recorded:</div>
+    ${table}
+    <h2>Add Event</h2>
+    <form method="POST" action="/add">
+      <input name="label" placeholder="Event label" required />
+      
+      <!-- Auto / Current Time -->
+      <button type="submit" name="timeType" value="auto">Add Now</button>
+      
+      <!-- Manual Past Time -->
+      <input type="time" name="manualTime" />
+      <button type="submit" name="timeType" value="manual">Add Past Time</button>
+    </form>
+  `);
 });
 
-// Add event (manual or auto)
-app.post("/add-event", async (req, res) => {
-  const { label, type, time: manualTime } = req.body;
+app.post("/add", async (req, res) => {
+  const label = req.body.label;
   let time;
 
-  if (type === "auto") {
-    time = localTime(); // current local time
+  if (req.body.timeType === "manual" && req.body.manualTime) {
+    const today = new Date();
+    const [hours, minutes] = req.body.manualTime.split(":");
+    time = new Date(today.getFullYear(), today.getMonth(), today.getDate(), hours, minutes);
   } else {
-    time = manualTime || localTime(); // manual time if filled, else current time
+    time = new Date(); // auto/current time
   }
 
-  if (!label || !time) {
-    return res.status(400).send("Missing label or time");
-  }
-
+  const event = { id: newId(), label, time };
   const events = (await db.get("events")) || [];
-  events.push({ id: newId(), label, time });
+  events.push(event);
   await db.set("events", events);
-
   res.redirect("/");
 });
 
-// Fetch events (for table)
-app.get("/events", async (req, res) => {
-  const events = (await db.get("events")) || [];
-  let tableHTML = `
-    <table border="1" cellpadding="5" cellspacing="0">
-      <tr>
-        <th>Event</th>
-        <th>Time</th>
-      </tr>
-  `;
-
-  events.forEach((e) => {
-    tableHTML += `
-      <tr>
-        <td>${e.label}</td>
-        <td>${e.time}</td>
-      </tr>
-    `;
-  });
-
-  tableHTML += "</table>";
-  res.send(tableHTML);
-});
-
-// Clear all events (for testing)
-app.post("/clear-events", async (req, res) => {
-  await db.set("events", []);
-  res.redirect("/");
-});
-
-// Start server
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server running at port ${PORT}`);
+app.listen(PORT, () => {
+  console.log(`Server running at http://localhost:${PORT}`);
 });
