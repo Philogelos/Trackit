@@ -2,107 +2,128 @@
 const express = require("express");
 const path = require("path");
 const bodyParser = require("body-parser");
-const DatabaseModule = require("@replit/database");
-const Database = DatabaseModule.default || DatabaseModule; // works with v2
+
+// Try Replit DB first, fallback to local JSON
+let dbClient;
+let dbType;
+try {
+  const { Database } = require("@replit/database");
+  dbClient = new Database();
+  dbType = "replit";
+  console.log("Using Replit DB");
+} catch (err) {
+  // Local fallback using lowdb v1
+  const low = require("lowdb");
+  const FileSync = require("lowdb/adapters/FileSync");
+  const adapter = new FileSync("db.json");
+  dbClient = low(adapter);
+  dbType = "local";
+  console.log("Using local JSON DB");
+}
+
 const app = express();
-const db = new Database();
 
-const PORT = process.env.PORT || 4000;
+app.use(express.json()); // <-- parse JSON bodies
+app.use(bodyParser.urlencoded({ extended: true })); // parse form data
 
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
-app.use(express.static("public"));
+// const app = express();
+// app.use(express.json());
+// app.use(bodyParser.urlencoded({ extended: true }));
 
-// Helpers
-const newId = () => Math.random().toString(36).slice(2, 10);
-const getLocalTime = (d = new Date()) =>
-  new Date(d).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+// Serve public folder
+app.use(express.static(path.join(__dirname, "public")));
 
-// Routes
-app.get("/", async (req, res) => {
-  const events = (await db.get("events")) || [];
-  const users = (await db.get("users")) || {};
-  
-  // Render login and main page
-  res.send(`
-    <h1>TrackIt App</h1>
-
-    <h2>Login / User</h2>
-    <form method="POST" action="/login">
-      <input name="username" placeholder="Username" required />
-      <button type="submit">Login</button>
-    </form>
-
-    <h2>Quick Event Buttons</h2>
-    <form method="POST" action="/add">
-      <button name="label" value="Bed">Bed</button>
-      <button name="label" value="Up">Up</button>
-      <button name="label" value="Gym">Gym</button>
-      <input name="customLabel" placeholder="Custom event" />
-      <button type="submit" name="timeType" value="auto">Add Custom</button>
-    </form>
-
-    <h2>Add Manual Event (pick time)</h2>
-    <form method="POST" action="/add">
-      <input name="label" placeholder="Event label" required />
-      <input type="time" name="manualTime" />
-      <button type="submit" name="timeType" value="manual">Add Past Time</button>
-      <button type="submit" name="timeType" value="auto">Add Now</button>
-    </form>
-
-    <h2>My Events</h2>
-    <table border="1">
-      <tr><th>Time</th><th>Event</th></tr>
-      ${events
-        .map((e) => `<tr><td>${getLocalTime(e.time)}</td><td>${e.label}</td></tr>`)
-        .join("")}
-    </table>
-  `);
+// Serve index.html at root
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public/index.html"));
 });
 
-// Login
-app.post("/login", async (req, res) => {
-  const username = req.body.username;
-  const users = (await db.get("users")) || {};
-  if (!users[username]) users[username] = { id: newId() };
-  await db.set("users", users);
-  res.redirect("/");
+
+// app.use(bodyParser.urlencoded({ extended: true }));
+// app.use(express.static(path.join(__dirname, "public")));
+
+let currentUser = null;
+
+// ----- LOGIN -----
+app.post("/login", (req, res) => {
+  const { username } = req.body;
+  if (!username) return res.redirect("/");
+  currentUser = username.trim();
+  res.redirect("/app.html");
 });
 
-// Add event
-app.post("/add", async (req, res) => {
-  let label = req.body.label || req.body.customLabel;
-  if (!label) return res.redirect("/");
+// ----- ADD EVENT -----
+// app.post("/add-event", async (req, res) => {
+//   if (!currentUser) return res.redirect("/");
 
-  let time;
-  if (req.body.timeType === "manual" && req.body.manualTime) {
-    const today = new Date();
-    const [hours, minutes] = req.body.manualTime.split(":");
-    time = new Date(today.getFullYear(), today.getMonth(), today.getDate(), hours, minutes);
+//   const { eventName, eventTime } = req.body;
+//   const timestamp = eventTime ? new Date(eventTime).toLocaleString() : new Date().toLocaleString();
+
+//   const userKey = `events_${currentUser}`;
+
+//   if (dbType === "replit") {
+//     let events = (await dbClient.get(userKey)) || [];
+//     events.push({ eventName, timestamp });
+//     await dbClient.set(userKey, events);
+//   } else {
+//     let events = dbClient.get(userKey).value() || [];
+//     events.push({ eventName, timestamp });
+//     dbClient.set(userKey, events).write();
+//   }
+
+//   res.redirect("/app.html");
+// });
+
+app.post("/add-event", async (req, res) => {
+  if (!currentUser) return res.redirect("/");
+
+  // Handles JSON from fetch or form data
+  const eventName = req.body.eventName || req.body.manualEventName;
+  const eventTime = req.body.timestamp || req.body.eventTime; 
+
+  if (!eventName) return res.status(400).send("No event name provided");
+
+  const timestamp = eventTime ? new Date(eventTime).toLocaleString() : new Date().toLocaleString();
+
+  const userKey = `events_${currentUser}`;
+
+  if (dbType === "replit") {
+    let events = (await dbClient.get(userKey)) || [];
+    events.push({ eventName, timestamp });
+    await dbClient.set(userKey, events);
   } else {
-    time = new Date();
+    let events = dbClient.get(userKey).value() || [];
+    events.push({ eventName, timestamp });
+    dbClient.set(userKey, events).write();
   }
 
-  const event = { id: newId(), label, time };
-  const events = (await db.get("events")) || [];
-  events.push(event);
-  await db.set("events", events);
-
-  res.redirect("/");
+  // Respond JSON for fetch or redirect for forms
+  if (req.headers["content-type"] === "application/json") {
+    res.json({ eventName, timestamp });
+  } else {
+    res.redirect("/app.html");
+  }
 });
 
-// Delete event (optional, admin testing)
-app.post("/delete", async (req, res) => {
-  const id = req.body.id;
-  if (!id) return res.redirect("/");
 
-  let events = (await db.get("events")) || [];
-  events = events.filter((e) => e.id !== id);
-  await db.set("events", events);
+// ----- GET EVENTS -----
+app.get("/events", async (req, res) => {
+  if (!currentUser) return res.json([]);
 
-  res.redirect("/");
+  const userKey = `events_${currentUser}`;
+  let events;
+
+  if (dbType === "replit") {
+    events = (await dbClient.get(userKey)) || [];
+  } else {
+    events = dbClient.get(userKey).value() || [];
+  }
+
+  res.json(events);
 });
 
+// ----- START SERVER -----
+const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
+  console.log(`✅ TrackIt app running at http://localhost:${PORT}`);
 });

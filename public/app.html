@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>TrackIt Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>TrackIt Dashboard</h1>
+
+  <div class="buttons">
+    <button class="event-btn" data-event="Sleep">Sleep</button>
+    <button class="event-btn" data-event="Workout">Workout</button>
+    <button class="event-btn" data-event="Meal">Meal</button>
+    <button id="manual-event-btn">Add Manual Event</button>
+  </div>
+
+  <div id="manual-event-form" style="display:none;">
+    <input type="text" id="manual-event-name" placeholder="Event name">
+    <input type="datetime-local" id="manual-event-time">
+    <button id="add-manual-btn">Add</button>
+  </div>
+
+  <table>
+    <thead>
+      <tr><th>Event</th><th>Time</th></tr>
+    </thead>
+    <tbody id="events-table"></tbody>
+  </table>
+
+  <script src="script.js"></script>
+</body>
+</html>
